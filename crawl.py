@@ -1,6 +1,7 @@
 from urllib.parse import urlsplit, urljoin
 from bs4 import BeautifulSoup, Tag
 from typing import TypedDict
+import requests
 
 
 class PageData(TypedDict):
@@ -88,5 +89,15 @@ def extract_page_data(html: str, page_url: str) -> PageData:
         "outgoing_links": get_urls_from_html(html, page_url),
         "image_urls": get_images_from_html(html, page_url),
     }
+
+
+def get_html(url: str) -> str:
+    response = requests.get(url, headers={"User-Agent": "webscraper/1.0"})
+    content_type = response.headers["content-type"]
+    if response.status_code >= 400:
+        response.raise_for_status()
+    if not "text/html" in content_type:
+        raise Exception(f'invalid content-type "{content_type}"')
+    return response.text
 
 
