@@ -101,3 +101,38 @@ def get_html(url: str) -> str:
     return response.text
 
 
+def crawl_page(base_url: str, current_url: str = None, page_data: dict[str, PageData] = {}) -> dict[str, PageData]:
+    # Default current_url to base_url
+    if not current_url:
+        current_url = base_url
+    
+    # Return if we're in a different domain
+    if urlsplit(current_url)[1] != urlsplit(base_url)[1]:
+        return
+    
+    key = normalize_url(current_url)
+    
+    # Return if we've already checked this page
+    if key in page_data:
+        return
+    
+    try:
+        print(f"crawling {current_url}")
+        html = get_html(current_url)
+        page_data[key] = extract_page_data(html, current_url)
+        for link in page_data[key]["outgoing_links"]:
+            crawl_page(base_url, link, page_data)
+    except Exception as e:
+        print(e)
+    
+    return page_data
+
+
+
+
+
+
+
+
+
+

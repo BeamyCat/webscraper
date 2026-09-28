@@ -1,5 +1,5 @@
 import sys
-from crawl import get_html
+from crawl import crawl_page
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
     
     base_url = sys.argv[1]
     print(f"starting crawl of: {base_url}")
-    print(get_html(base_url))
+    print(crawl_page(base_url))
 
 
 if __name__ == "__main__":
