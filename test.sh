@@ -1,2 +1,2 @@
 source .venv/bin/activate
-uv run main.py https://learnwebscraping.dev/practice/ecommerce/
+uv run main.py https://learnwebscraping.dev/practice/ecommerce/ 10 100
