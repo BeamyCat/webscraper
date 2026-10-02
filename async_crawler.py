@@ -2,6 +2,10 @@ from crawl import PageData, extract_page_data, normalize_url
 from asyncio import Lock, Semaphore, create_task, gather
 from aiohttp import ClientSession
 from urllib.parse import urlsplit
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+import time
 
 
 class AsyncCrawler:
@@ -45,15 +49,20 @@ class AsyncCrawler:
     
     
     async def get_html(self, url: str) -> str:
-        async with self.session.get(
-            url, headers={"User-Agent": "webscraper/1.0"}
-        ) as response:
-            content_type = response.headers["content-type"]
-            if response.status >= 400:
-                response.raise_for_status()
-            if not "text/html" in content_type:
-                raise Exception(f'invalid content-type "{content_type}"')
-            return await response.text()
+        # So using Selenium does work correctly in that it only scrapes data
+        # after the page has been fully loaded and javascript run.
+        # The issue is that it's really slow.
+        # I think it would be better to create multiple drivers that are each
+        # scraping pages in parallel, assuming Selenium will allow that.
+        # This would likely require creating multiple instances of AsyncCrawler;
+        # a number of instances equal to max_concurrency.
+        options = Options()
+        options.add_argument("--headless=new")
+        driver = webdriver.Chrome(options=options)
+        driver.get(url)
+        html = driver.find_element(By.TAG_NAME, "html").get_attribute("outerHTML")
+        driver.quit()
+        return html
     
     
     async def crawl_page(self, current_url: str) -> dict[str, PageData]:

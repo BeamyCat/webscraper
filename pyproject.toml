@@ -1,11 +1,12 @@
 [project]
 name = "webscraper"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "A web scraper created following the relevant course on Boot.dev"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiohttp==3.12.12",
     "beautifulsoup4==4.13.3",
     "requests==2.32.4",
+    "selenium==4.49.0",
 ]
