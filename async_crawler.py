@@ -1,7 +1,9 @@
 from crawl import PageData, extract_page_data, normalize_url
-from asyncio import Lock, Semaphore, create_task, gather
+import asyncio
+from asyncio import Lock, Semaphore
 from aiohttp import ClientSession
 from urllib.parse import urlsplit
+from playwright.async_api import async_playwright, Playwright
 
 
 class AsyncCrawler:
@@ -45,15 +47,13 @@ class AsyncCrawler:
     
     
     async def get_html(self, url: str) -> str:
-        async with self.session.get(
-            url, headers={"User-Agent": "webscraper/1.0"}
-        ) as response:
-            content_type = response.headers["content-type"]
-            if response.status >= 400:
-                response.raise_for_status()
-            if not "text/html" in content_type:
-                raise Exception(f'invalid content-type "{content_type}"')
-            return await response.text()
+        async with async_playwright() as playwright:
+            browser = await playwright.webkit.launch()
+            page = await browser.new_page()
+            await page.goto(url)
+            html = await page.content()
+            await browser.close()
+            return html
     
     
     async def crawl_page(self, current_url: str) -> dict[str, PageData]:
@@ -79,14 +79,14 @@ class AsyncCrawler:
                 async with self.lock:
                     self.page_data[key] = extract_page_data(html, current_url)
                 for link in self.page_data[key]["outgoing_links"]:
-                    task = create_task(self.crawl_page(link))
+                    task = asyncio.create_task(self.crawl_page(link))
                     tasks.append(task)
                     self.all_tasks.add(task)
             except Exception as e:
                 print(e)
         
         try:
-            await gather(*tasks)
+            await asyncio.gather(*tasks)
         finally:
            return self.page_data
     
